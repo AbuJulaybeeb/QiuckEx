@@ -14,9 +14,12 @@ export function NetworkBadge() {
   const normalized = network.toLowerCase();
 
   const badgeStyles: Record<string, string> = {
-    testnet: "bg-yellow-100 text-yellow-800 border border-yellow-200",
-    futurenet: "bg-blue-100 text-blue-800 border border-blue-200",
-    mainnet: "bg-green-100 text-green-800 border border-green-200",
+    testnet:
+      "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 dark:border-amber-500/30",
+    futurenet:
+      "bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20 dark:border-blue-500/30",
+    mainnet:
+      "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30",
   };
 
   const label = {
@@ -27,12 +30,15 @@ export function NetworkBadge() {
 
   return (
     <div
-      className={`fixed top-4 left-60 px-3 py-1 rounded-full text-xs font-bold transition-all ${badgeStyles[normalized] || ""}`}
+      role="status"
+      aria-label={`Stellar network: ${label}`}
+      className={`fixed top-4 right-4 px-3 py-1 rounded-full text-xs font-black tracking-wider transition-all z-40 shadow-sm backdrop-blur-md ${
+        badgeStyles[normalized] || "bg-neutral-500/10 text-neutral-400 border border-neutral-500/20"
+      }`}
     >
       {label}
-
       {!process.env.NEXT_PUBLIC_STELLAR_NETWORK && (
-        <span className="ml-2 opacity-50 font-normal italic">(default)</span>
+        <span className="ml-1 opacity-60 font-medium italic">(default)</span>
       )}
     </div>
   );

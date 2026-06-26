@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { CheckCircle, ExternalLink, Copy, Check, Home } from "lucide-react";
 
 interface PaymentLinkStatus {
   username: string;
@@ -17,9 +19,22 @@ interface PaidPaymentStateProps {
 }
 
 export function PaidPaymentState({ status }: PaidPaymentStateProps) {
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
+
   const explorerUrl = status.transactionHash
     ? `https://stellarchain.io/tx/${status.transactionHash}`
     : null;
+
+  const handleCopyHash = async () => {
+    if (!status.transactionHash) return;
+    try {
+      await navigator.clipboard.writeText(status.transactionHash);
+      setCopyStatus("Copied!");
+    } catch {
+      setCopyStatus("Failed to copy");
+    }
+    window.setTimeout(() => setCopyStatus(null), 2500);
+  };
 
   return (
     <div className="space-y-8">
@@ -27,154 +42,144 @@ export function PaidPaymentState({ status }: PaidPaymentStateProps) {
       <div className="text-center">
         <div
           aria-hidden="true"
-          className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse motion-reduce:animate-none"
+          className="w-24 h-24 bg-emerald-500/10 dark:bg-emerald-500/20 ring-1 ring-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse motion-reduce:animate-none"
         >
-          <svg
-            className="w-12 h-12 text-green-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            focusable="false"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={3}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
+          <CheckCircle className="w-12 h-12 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <h1 className="text-4xl font-bold mb-3 text-green-300">
+        <h1 className="text-4xl font-black mb-3 text-emerald-600 dark:text-emerald-400">
           Payment Complete!
         </h1>
-        <p className="text-neutral-300 text-lg">{status.userMessage}</p>
+        <p className="text-neutral-600 dark:text-neutral-300 text-lg leading-relaxed max-w-md mx-auto">
+          {status.userMessage}
+        </p>
       </div>
 
       {/* Payment Success Card */}
-      <div className="bg-gradient-to-br from-green-500/10 to-indigo-500/10 border border-green-400/30 rounded-2xl p-8">
-        <h2 className="text-xl font-bold mb-6">Payment Summary</h2>
+      <section aria-labelledby="paid-summary-heading">
+        <div className="bg-gradient-to-br from-emerald-500/5 to-indigo-500/5 dark:from-emerald-500/10 dark:to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 rounded-2xl p-6 md:p-8 shadow-sm">
+          <h2
+            id="paid-summary-heading"
+            className="text-xl font-bold mb-6 text-neutral-900 dark:text-white"
+          >
+            Payment Summary
+          </h2>
 
-        <dl className="space-y-4">
-          <div className="flex justify-between items-center py-3 border-b border-white/5">
-            <dt className="text-neutral-300">Paid To</dt>
-            <dd className="font-semibold">@{status.username}</dd>
-          </div>
-
-          <div className="flex justify-between items-center py-3 border-b border-white/5">
-            <dt className="text-neutral-300">Amount Paid</dt>
-            <dd className="text-3xl font-bold text-green-300">
-              {status.amount} {status.asset}
-            </dd>
-          </div>
-
-          {status.memo && (
-            <div className="flex justify-between items-center py-3 border-b border-white/5">
-              <dt className="text-neutral-300">Memo</dt>
-              <dd className="font-mono text-sm">{status.memo}</dd>
-            </div>
-          )}
-
-          {status.paidAt && (
-            <div className="flex justify-between items-center py-3 border-b border-white/5">
-              <dt className="text-neutral-300">Completed At</dt>
-              <dd className="text-sm">
-                {new Date(status.paidAt).toLocaleString()}
+          <dl className="space-y-4">
+            <div className="flex justify-between items-center py-3 border-b border-neutral-100 dark:border-white/5">
+              <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Paid To</dt>
+              <dd className="font-semibold text-neutral-900 dark:text-white">
+                @{status.username}
               </dd>
             </div>
-          )}
-        </dl>
-      </div>
+
+            <div className="flex justify-between items-center py-3 border-b border-neutral-100 dark:border-white/5">
+              <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Amount Paid</dt>
+              <dd className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                {status.amount} {status.asset}
+              </dd>
+            </div>
+
+            {status.memo && (
+              <div className="flex justify-between items-center py-3 border-b border-neutral-100 dark:border-white/5">
+                <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Memo</dt>
+                <dd className="font-mono text-sm text-neutral-900 dark:text-neutral-200">
+                  {status.memo}
+                </dd>
+              </div>
+            )}
+
+            {status.paidAt && (
+              <div className="flex justify-between items-center py-3">
+                <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Completed At</dt>
+                <dd className="text-sm text-neutral-900 dark:text-neutral-200 font-medium">
+                  <time dateTime={status.paidAt}>
+                    {new Date(status.paidAt).toLocaleString()}
+                  </time>
+                </dd>
+              </div>
+            )}
+          </dl>
+        </div>
+      </section>
 
       {/* Transaction Hash */}
       {status.transactionHash && (
-        <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6">
-          <h3 className="text-sm font-semibold text-neutral-200 mb-3">
-            Transaction Hash
-          </h3>
-          <div className="bg-black/50 rounded-xl p-4 font-mono text-xs break-all">
-            {status.transactionHash}
-          </div>
-
-          {explorerUrl && (
-            <a
-              href={explorerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="View transaction on Stellar explorer (opens in new tab)"
-              className="mt-4 inline-flex items-center gap-2 text-indigo-300 hover:text-indigo-200 underline-offset-4 hover:underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
+        <section aria-labelledby="tx-hash-heading">
+          <div className="bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+            <h3
+              id="tx-hash-heading"
+              className="text-sm font-bold text-neutral-500 dark:text-neutral-400 mb-3"
             >
-              <span>View on Explorer</span>
-              <svg
-                aria-hidden="true"
-                focusable="false"
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              Transaction Hash
+            </h3>
+            <div className="bg-neutral-50 dark:bg-black/50 border border-neutral-100 dark:border-white/5 rounded-xl p-4 font-mono text-xs break-all text-neutral-800 dark:text-neutral-300 select-all">
+              {status.transactionHash}
+            </div>
+
+            {explorerUrl && (
+              <a
+                href={explorerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View transaction on Stellar explorer (opens in new tab)"
+                className="mt-4 inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 font-semibold underline-offset-4 hover:underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0 0L10 14"
-                />
-              </svg>
-            </a>
-          )}
-        </div>
+                <span>View on Explorer</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            )}
+          </div>
+        </section>
       )}
 
-      {/* Success Message */}
-      <div className="bg-green-500/10 border border-green-400/30 rounded-xl p-6">
-        <div className="flex gap-4">
-          <div className="flex-shrink-0" aria-hidden="true">
-            <svg
-              className="w-6 h-6 text-green-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              focusable="false"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div>
-            <h3 className="font-semibold text-green-300 mb-2">
-              What&apos;s next?
-            </h3>
-            <p className="text-sm text-green-200/90">
-              Your payment has been confirmed on the Stellar network. The
-              recipient has been notified and the funds are now available in
-              their account.
-            </p>
-          </div>
+      {/* Success callout */}
+      <div
+        role="note"
+        className="bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl p-5 flex gap-4"
+      >
+        <div className="flex-shrink-0 mt-0.5" aria-hidden="true">
+          <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <div>
+          <h3 className="font-bold text-emerald-800 dark:text-emerald-300 mb-1">
+            What&apos;s next?
+          </h3>
+          <p className="text-sm text-neutral-600 dark:text-emerald-200/90 leading-relaxed">
+            Your payment has been confirmed on the Stellar network. The
+            recipient has been notified and the funds are now available in
+            their account.
+          </p>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Link
           href="/"
-          className="block w-full py-4 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-bold text-lg text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-lg text-white text-center transition-all shadow-md hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background flex items-center justify-center gap-2"
         >
-          Back to Homepage
+          <Home className="w-5 h-5" />
+          <span>Back to Homepage</span>
         </Link>
 
         {status.transactionHash && (
           <button
             type="button"
             aria-label="Copy transaction hash to clipboard"
-            onClick={() => {
-              navigator.clipboard.writeText(status.transactionHash!);
-            }}
-            className="w-full py-3 bg-neutral-800 hover:bg-neutral-700 rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            onClick={handleCopyHash}
+            className="w-full py-3 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background flex items-center justify-center gap-2 border border-neutral-200 dark:border-white/5"
           >
-            Copy Transaction Hash
+            {copyStatus ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>{copyStatus}</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                <span>Copy Transaction Hash</span>
+              </>
+            )}
           </button>
         )}
       </div>
