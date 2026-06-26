@@ -60,30 +60,23 @@ export function ExpiredPaymentState({ status }: ExpiredPaymentStateProps) {
               </dd>
             </div>
 
-            {status.memo && (
-              <div className="flex justify-between items-center py-3 border-b border-neutral-100 dark:border-white/5">
-                <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Memo</dt>
-                <dd className="font-mono text-sm text-neutral-900 dark:text-neutral-200">
-                  {status.memo}
-                </dd>
-              </div>
-            )}
+           {status.memo && (
+             <div className="flex justify-between items-center py-3 border-b border-border">
+               <dt className="text-muted">Memo</dt>
+               <dd className="font-mono text-sm">{status.memo}</dd>
+             </div>
+           )}
 
-            {status.expiresAt && (
-              <div className="flex justify-between items-center py-3">
-                <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Expired On</dt>
-                <dd className="text-sm text-neutral-900 dark:text-neutral-200 font-medium">
-                  <time dateTime={status.expiresAt}>
-                    {new Date(status.expiresAt).toLocaleString(undefined, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                  </time>
-                </dd>
-              </div>
-            )}
-          </dl>
-        </div>
+           {status.expiresAt && (
+             <div className="flex justify-between items-center py-3 border-b border-border">
+               <dt className="text-muted">Expired On</dt>
+               <dd className="text-sm">
+                 {new Date(status.expiresAt).toLocaleDateString()}
+               </dd>
+             </div>
+           )}
+         </dl>
+       </div>
       </section>
 
       {/* Warning callout */}

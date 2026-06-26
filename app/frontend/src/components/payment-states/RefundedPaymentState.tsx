@@ -61,31 +61,23 @@ export function RefundedPaymentState({ status }: RefundedPaymentStateProps) {
               </dd>
             </div>
 
-            {status.memo && (
-              <div className="flex justify-between items-center py-3 border-b border-neutral-100 dark:border-white/5">
-                <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Original Memo</dt>
-                <dd className="font-mono text-sm text-neutral-900 dark:text-neutral-200">
-                  {status.memo}
-                </dd>
-              </div>
-            )}
+           {status.memo && (
+             <div className="flex justify-between items-center py-3 border-b border-border">
+               <dt className="text-muted">Original Memo</dt>
+               <dd className="font-mono text-sm">{status.memo}</dd>
+             </div>
+           )}
 
-            {status.paidAt && (
-              <div className="flex justify-between items-center py-3">
-                <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Original Payment Date</dt>
-                <dd className="text-sm text-neutral-900 dark:text-neutral-200 font-medium">
-                  <time dateTime={status.paidAt}>
-                    {new Date(status.paidAt).toLocaleDateString(undefined, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </time>
-                </dd>
-              </div>
-            )}
-          </dl>
-        </div>
+           {status.paidAt && (
+             <div className="flex justify-between items-center py-3 border-b border-border">
+               <dt className="text-muted">Original Payment Date</dt>
+               <dd className="text-sm">
+                 {new Date(status.paidAt).toLocaleDateString()}
+               </dd>
+             </div>
+           )}
+         </dl>
+       </div>
       </section>
 
       {/* Info callout */}

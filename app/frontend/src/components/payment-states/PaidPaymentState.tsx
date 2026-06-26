@@ -79,27 +79,23 @@ export function PaidPaymentState({ status }: PaidPaymentStateProps) {
               </dd>
             </div>
 
-            {status.memo && (
-              <div className="flex justify-between items-center py-3 border-b border-neutral-100 dark:border-white/5">
-                <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Memo</dt>
-                <dd className="font-mono text-sm text-neutral-900 dark:text-neutral-200">
-                  {status.memo}
-                </dd>
-              </div>
-            )}
+           {status.memo && (
+             <div className="flex justify-between items-center py-3 border-b border-border">
+               <dt className="text-muted">Memo</dt>
+               <dd className="font-mono text-sm">{status.memo}</dd>
+             </div>
+           )}
 
-            {status.paidAt && (
-              <div className="flex justify-between items-center py-3">
-                <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Completed At</dt>
-                <dd className="text-sm text-neutral-900 dark:text-neutral-200 font-medium">
-                  <time dateTime={status.paidAt}>
-                    {new Date(status.paidAt).toLocaleString()}
-                  </time>
-                </dd>
-              </div>
-            )}
-          </dl>
-        </div>
+           {status.paidAt && (
+             <div className="flex justify-between items-center py-3 border-b border-border">
+               <dt className="text-muted">Completed At</dt>
+               <dd className="text-sm">
+                 {new Date(status.paidAt).toLocaleString()}
+               </dd>
+             </div>
+           )}
+         </dl>
+       </div>
       </section>
 
       {/* Transaction Hash */}
