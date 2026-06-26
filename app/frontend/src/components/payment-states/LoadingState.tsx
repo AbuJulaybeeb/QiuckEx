@@ -24,6 +24,12 @@ export function LoadingState() {
           Please wait while we fetch the payment information.
         </p>
       </div>
+      <p className="mt-8 text-lg text-muted">
+        Loading payment details...
+      </p>
+      <p className="mt-2 text-sm text-subtle">
+        Please wait while we fetch the payment information
+      </p>
     </div>
   );
 }

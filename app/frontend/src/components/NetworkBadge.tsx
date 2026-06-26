@@ -14,12 +14,9 @@ export function NetworkBadge() {
   const normalized = network.toLowerCase();
 
   const badgeStyles: Record<string, string> = {
-    testnet:
-      "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 dark:border-amber-500/30",
-    futurenet:
-      "bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20 dark:border-blue-500/30",
-    mainnet:
-      "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30",
+    testnet: "bg-warning-soft text-warning border border-warning-soft",
+    futurenet: "bg-brand-soft text-brand border border-brand-soft",
+    mainnet: "bg-success-soft text-success border border-success-soft",
   };
 
   const label = {

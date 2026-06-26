@@ -26,29 +26,16 @@ export function ErrorState({ message, onRetry, retryCount }: ErrorStateProps) {
         <AlertTriangle className="w-10 h-10 text-red-600 dark:text-red-400" />
       </div>
 
-      {/* Heading + message */}
-      <div className="text-center space-y-3">
-        <h1 className="text-2xl font-black text-neutral-900 dark:text-white">
-          Unable to Load Payment
-        </h1>
-        <p className="text-neutral-600 dark:text-neutral-300 max-w-md leading-relaxed mx-auto">
-          {message}
-        </p>
-      </div>
+      <h2 className="text-2xl font-bold mb-4">Unable to Load Payment</h2>
+      <p className="text-muted text-center max-w-md mb-8">{message}</p>
 
       {/* Multiple-failure hint */}
       {isMultipleFailures && (
-        <div
-          role="note"
-          className="bg-amber-500/5 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-5 max-w-md w-full"
-        >
-          <h2 className="text-amber-800 dark:text-amber-300 text-sm font-bold mb-2">
-            Multiple failures detected.
-          </h2>
-          <p className="text-neutral-600 dark:text-amber-200/90 text-sm mb-2">
-            This could be due to:
+        <div className="bg-warning-soft border border-amber-500/20 rounded-xl p-4 mb-8 max-w-md">
+          <p className="text-warning text-sm">
+            <strong>Multiple failures detected.</strong> This could be due to:
           </p>
-          <ul className="text-neutral-600 dark:text-amber-200/90 text-sm space-y-1 list-disc list-inside">
+          <ul className="text-warning/90 text-sm mt-2 space-y-1 list-disc list-inside">
             <li>Network connectivity issues</li>
             <li>Server temporarily unavailable</li>
             <li>Invalid payment link parameters</li>
@@ -61,7 +48,7 @@ export function ErrorState({ message, onRetry, retryCount }: ErrorStateProps) {
         <button
           type="button"
           onClick={onRetry}
-          className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background flex items-center justify-center gap-2"
+          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <RefreshCw className="w-4 h-4" />
           <span>
@@ -71,7 +58,7 @@ export function ErrorState({ message, onRetry, retryCount }: ErrorStateProps) {
 
         <Link
           href="/"
-          className="flex-1 px-6 py-3 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-white/5 rounded-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background flex items-center justify-center gap-2"
+          className="px-6 py-3 bg-surface-strong hover:bg-surface-strong rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Home className="w-4 h-4" />
           <span>Go Home</span>
@@ -79,7 +66,7 @@ export function ErrorState({ message, onRetry, retryCount }: ErrorStateProps) {
       </div>
 
       {retryCount > 0 && (
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
+        <p className="mt-6 text-xs text-muted">
           Still having issues? Contact support with the error message above.
         </p>
       )}

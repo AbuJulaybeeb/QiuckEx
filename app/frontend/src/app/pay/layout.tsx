@@ -1,5 +1,11 @@
-export default function PayLayout({ children }: { children: React.ReactNode }) {
-  // This layout adds no visual chrome — the page wrapper handles the background
-  // and the page.tsx handles dynamic generateMetadata for the payment link.
+/**
+ * Layout for /pay. The client-side page and page-metadata are handled at the page level.
+ */
+
+interface PayLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function PayLayout({ children }: PayLayoutProps) {
   return <>{children}</>;
 }

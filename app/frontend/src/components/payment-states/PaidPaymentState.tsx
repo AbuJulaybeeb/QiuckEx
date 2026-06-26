@@ -46,36 +46,40 @@ export function PaidPaymentState({ status }: PaidPaymentStateProps) {
         >
           <CheckCircle className="w-12 h-12 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <h1 className="text-4xl font-black mb-3 text-emerald-600 dark:text-emerald-400">
+        <h1 className="text-4xl font-bold mb-3 text-success">
           Payment Complete!
         </h1>
-        <p className="text-neutral-600 dark:text-neutral-300 text-lg leading-relaxed max-w-md mx-auto">
-          {status.userMessage}
-        </p>
+        <p className="text-muted text-lg">{status.userMessage}</p>
       </div>
 
       {/* Payment Success Card */}
-      <section aria-labelledby="paid-summary-heading">
-        <div className="bg-gradient-to-br from-emerald-500/5 to-indigo-500/5 dark:from-emerald-500/10 dark:to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 rounded-2xl p-6 md:p-8 shadow-sm">
-          <h2
-            id="paid-summary-heading"
-            className="text-xl font-bold mb-6 text-neutral-900 dark:text-white"
-          >
-            Payment Summary
-          </h2>
+      <div className="bg-gradient-to-br from-green-500/10 to-indigo-500/10 border border-green-400/30 rounded-2xl p-8">
+        <h2 className="text-xl font-bold mb-6">Payment Summary</h2>
 
-          <dl className="space-y-4">
-            <div className="flex justify-between items-center py-3 border-b border-neutral-100 dark:border-white/5">
-              <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Paid To</dt>
-              <dd className="font-semibold text-neutral-900 dark:text-white">
-                @{status.username}
-              </dd>
+        <dl className="space-y-4">
+          <div className="flex justify-between items-center py-3 border-b border-border">
+            <dt className="text-muted">Paid To</dt>
+            <dd className="font-semibold">@{status.username}</dd>
+          </div>
+
+          <div className="flex justify-between items-center py-3 border-b border-border">
+            <dt className="text-muted">Amount Paid</dt>
+            <dd className="text-3xl font-bold text-success">
+              {status.amount} {status.asset}
+            </dd>
+          </div>
+
+          {status.memo && (
+            <div className="flex justify-between items-center py-3 border-b border-border">
+              <dt className="text-muted">Memo</dt>
+              <dd className="font-mono text-sm">{status.memo}</dd>
             </div>
 
-            <div className="flex justify-between items-center py-3 border-b border-neutral-100 dark:border-white/5">
-              <dt className="text-neutral-500 dark:text-neutral-400 text-sm">Amount Paid</dt>
-              <dd className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                {status.amount} {status.asset}
+          {status.paidAt && (
+            <div className="flex justify-between items-center py-3 border-b border-border">
+              <dt className="text-muted">Completed At</dt>
+              <dd className="text-sm">
+                {new Date(status.paidAt).toLocaleString()}
               </dd>
             </div>
 
@@ -100,11 +104,21 @@ export function PaidPaymentState({ status }: PaidPaymentStateProps) {
 
       {/* Transaction Hash */}
       {status.transactionHash && (
-        <section aria-labelledby="tx-hash-heading">
-          <div className="bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
-            <h3
-              id="tx-hash-heading"
-              className="text-sm font-bold text-neutral-500 dark:text-neutral-400 mb-3"
+        <div className="bg-card/50 border border-border-strong rounded-2xl p-6">
+          <h3 className="text-sm font-semibold text-muted mb-3">
+            Transaction Hash
+          </h3>
+          <div className="bg-background/50 rounded-xl p-4 font-mono text-xs break-all">
+            {status.transactionHash}
+          </div>
+
+          {explorerUrl && (
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="View transaction on Stellar explorer (opens in new tab)"
+              className="mt-4 inline-flex items-center gap-2 text-brand hover:text-brand underline-offset-4 hover:underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
             >
               Transaction Hash
             </h3>
@@ -128,23 +142,35 @@ export function PaidPaymentState({ status }: PaidPaymentStateProps) {
         </section>
       )}
 
-      {/* Success callout */}
-      <div
-        role="note"
-        className="bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl p-5 flex gap-4"
-      >
-        <div className="flex-shrink-0 mt-0.5" aria-hidden="true">
-          <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-        </div>
-        <div>
-          <h3 className="font-bold text-emerald-800 dark:text-emerald-300 mb-1">
-            What&apos;s next?
-          </h3>
-          <p className="text-sm text-neutral-600 dark:text-emerald-200/90 leading-relaxed">
-            Your payment has been confirmed on the Stellar network. The
-            recipient has been notified and the funds are now available in
-            their account.
-          </p>
+      {/* Success Message */}
+      <div className="bg-green-500/10 border border-green-400/30 rounded-xl p-6">
+        <div className="flex gap-4">
+          <div className="flex-shrink-0" aria-hidden="true">
+            <svg
+              className="w-6 h-6 text-green-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              focusable="false"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-semibold text-success mb-2">
+              What&apos;s next?
+            </h3>
+            <p className="text-sm text-success/90">
+              Your payment has been confirmed on the Stellar network. The
+              recipient has been notified and the funds are now available in
+              their account.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -152,7 +178,7 @@ export function PaidPaymentState({ status }: PaidPaymentStateProps) {
       <div className="space-y-3">
         <Link
           href="/"
-          className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-lg text-white text-center transition-all shadow-md hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background flex items-center justify-center gap-2"
+          className="block w-full py-4 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-bold text-lg text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Home className="w-5 h-5" />
           <span>Back to Homepage</span>
@@ -162,8 +188,10 @@ export function PaidPaymentState({ status }: PaidPaymentStateProps) {
           <button
             type="button"
             aria-label="Copy transaction hash to clipboard"
-            onClick={handleCopyHash}
-            className="w-full py-3 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background flex items-center justify-center gap-2 border border-neutral-200 dark:border-white/5"
+            onClick={() => {
+              navigator.clipboard.writeText(status.transactionHash!);
+            }}
+            className="w-full py-3 bg-surface-strong hover:bg-surface-strong rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {copyStatus ? (
               <>

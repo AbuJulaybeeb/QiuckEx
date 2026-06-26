@@ -19,7 +19,11 @@ mod fee_router;
 mod fee_router_test;
 #[cfg(test)]
 mod fee_test;
+#[cfg(test)]
+mod fuzz_test;
 mod hook;
+#[cfg(test)]
+mod metadata_test;
 pub mod nonce;
 #[cfg(test)]
 mod nonce_test;
@@ -44,7 +48,7 @@ mod upgrade_test;
 use errors::QuickexError;
 use storage::*;
 use types::{
-    EscrowEntry, EscrowStatus, FeeConfig, OracleFeeConfig, PerAssetFeeConfig,
+    DeploymentMetadata, EscrowEntry, EscrowStatus, FeeConfig, OracleFeeConfig, PerAssetFeeConfig,
     PrivacyAwareEscrowView, Role, StealthDepositParams,
 };
 
@@ -167,6 +171,7 @@ impl QuickexContract {
     /// * `ContractPaused` - Contract is currently paused
     /// * `PrivacyAlreadySet` - Privacy state is already at the requested value
     pub fn set_privacy(env: Env, owner: Address, enabled: bool) -> Result<(), QuickexError> {
+        admin::require_initialized(&env)?;
         privacy::set_privacy(&env, owner, enabled)
     }
 
@@ -494,6 +499,7 @@ impl QuickexContract {
     ///
     /// Only escrows in `Spent` or `Refunded` status can be removed.
     pub fn cleanup_escrow(env: Env, commitment: BytesN<32>) -> Result<(), QuickexError> {
+        admin::require_initialized(&env)?;
         escrow::cleanup_escrow(&env, commitment)
     }
 
@@ -501,6 +507,7 @@ impl QuickexContract {
     ///
     /// Any user can call this to keep an escrow from being archived.
     pub fn extend_escrow_ttl(env: Env, commitment: BytesN<32>) -> Result<(), QuickexError> {
+        admin::require_initialized(&env)?;
         escrow::extend_escrow_ttl(&env, commitment)
     }
 
@@ -631,6 +638,27 @@ impl QuickexContract {
         admin::get_version(&env)
     }
 
+    /// Return deployment metadata for compatibility validation.
+    ///
+    /// Clients and indexers can call this view (no auth required) to detect
+    /// version mismatches before interacting with the contract.
+    ///
+    /// The returned [`DeploymentMetadata`] includes:
+    /// - `contract_version` — stored schema version (0 for legacy deployments).
+    /// - `event_schema_version` — current event payload schema version.
+    /// - `wasm_hash` — 32-byte hash of the WASM recorded at the last `upgrade()` call;
+    ///   `None` when the contract has never been upgraded.
+    /// - `contract_id` — on-chain address of this contract instance, which binds
+    ///   the metadata to a specific deployment and network.
+    pub fn get_deployment_metadata(env: Env) -> DeploymentMetadata {
+        DeploymentMetadata {
+            contract_version: admin::get_version(&env),
+            event_schema_version: events::EVENT_SCHEMA_VERSION,
+            wasm_hash: storage::get_wasm_hash(&env),
+            contract_id: env.current_contract_address(),
+        }
+    }
+
     /// Run any pending data migrations for the current contract code (**Admin only**).
     ///
     /// This entrypoint is intended to be called immediately after upgrading the contract WASM
@@ -738,12 +766,14 @@ impl QuickexContract {
 
     /// Register an external hook contract to receive escrow lifecycle callbacks.
     pub fn register_hook(env: Env, hook_contract: Address) -> Result<(), QuickexError> {
+        admin::require_initialized(&env)?;
         hook::assert_not_reentrant(&env)?;
         hook::register_hook(&env, hook_contract)
     }
 
     /// Unregister a hook contract.
     pub fn unregister_hook(env: Env, hook_contract: Address) -> Result<(), QuickexError> {
+        admin::require_initialized(&env)?;
         hook::assert_not_reentrant(&env)?;
         hook::unregister_hook(&env, hook_contract)
     }
@@ -1038,12 +1068,85 @@ impl QuickexContract {
     ) -> Result<(), QuickexError> {
         admin::require_admin(&env, &caller)?;
 
+        storage::set_wasm_hash(&env, &new_wasm_hash);
         env.deployer()
             .update_current_contract_wasm(new_wasm_hash.clone());
 
         events::publish_contract_upgraded(&env, new_wasm_hash, &caller);
 
         Ok(())
+    }
+
+    /// Set the upgrade window: when upgrades are permitted (**Admin only**).
+    ///
+    /// Defines an epoch timestamp range `[start, end)` during which `start_upgrade` is allowed.
+    /// - `start` = 0: no window set, upgrades blocked
+    /// - `end` = 0: no upper bound, upgrades allowed from `start` onwards
+    ///
+    /// # Arguments
+    /// * `env` - The contract environment
+    /// * `caller` - Caller address (must be admin)
+    /// * `start` - Ledger timestamp when upgrades become allowed
+    /// * `end` - Ledger timestamp when upgrades become blocked (0 = unbounded)
+    ///
+    /// # Errors
+    /// * `InsufficientRole` - Caller is not admin
+    pub fn set_upgrade_window(
+        env: Env,
+        caller: Address,
+        start: u64,
+        end: u64,
+    ) -> Result<(), QuickexError> {
+        admin::set_upgrade_window(&env, &caller, start, end)
+    }
+
+    /// Get the current upgrade window.
+    ///
+    /// Returns `(start, end)` epoch timestamps. Both 0 means no window is set.
+    pub fn get_upgrade_window(env: Env) -> (u64, u64) {
+        storage::get_upgrade_window(&env)
+    }
+
+    /// Start an upgrade during the active upgrade window (**Admin only**).
+    ///
+    /// Sets the contract into upgrade-in-progress state and emits `UpgradeStarted` event.
+    /// Must be followed by calling `upgrade()` and then `complete_upgrade()`.
+    ///
+    /// Blocks outside the upgrade window (Issue #432 AC1).
+    ///
+    /// # Arguments
+    /// * `env` - The contract environment
+    /// * `caller` - Caller address (must be admin)
+    /// * `new_version` - The target contract version
+    ///
+    /// # Errors
+    /// * `InvalidAmount` - (repurposed) upgrade window not active
+    /// * `ContractPaused` - (repurposed) upgrade already in progress
+    pub fn start_upgrade(env: Env, caller: Address, new_version: u32) -> Result<(), QuickexError> {
+        admin::start_upgrade(&env, &caller, new_version)
+    }
+
+    /// Complete an upgrade after WASM swap (**Admin only**).
+    ///
+    /// Runs migration logic and validates post-upgrade invariants (Issue #432 AC2).
+    /// Emits `UpgradeCompleted` event. Must be called after `start_upgrade()` and `upgrade()`.
+    ///
+    /// # Arguments
+    /// * `env` - The contract environment
+    /// * `caller` - Caller address (must be admin)
+    /// * `new_version` - The target version (0 = auto-detect from migration)
+    ///
+    /// # Returns
+    /// The actual new contract version
+    ///
+    /// # Errors
+    /// * `InternalError` - no upgrade in progress, or post-upgrade invariants violated
+    pub fn complete_upgrade(
+        env: Env,
+        caller: Address,
+        new_version: u32,
+    ) -> Result<u32, QuickexError> {
+        admin::complete_upgrade(&env, &caller, new_version)
     }
 
     // -----------------------------------------------------------------------

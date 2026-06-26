@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PaymentPageClient from "./PaymentPageClient";
 import {
   fetchPaymentMeta,
   buildPaymentTitle,
@@ -8,7 +9,6 @@ import {
   FALLBACK_PAYMENT_METADATA,
   SITE_NAME,
 } from "@/lib/og-metadata";
-import PaymentPageClient from "./PaymentPageClient";
 
 interface GenerateMetadataProps {
   searchParams: Promise<{
@@ -23,16 +23,12 @@ interface GenerateMetadataProps {
 export async function generateMetadata({
   searchParams,
 }: GenerateMetadataProps): Promise<Metadata> {
-  // searchParams is a Promise in Next.js 15
   const params = await searchParams;
-  const username = params?.username;
-  const amount = params?.amount;
-  const asset = params?.asset;
-  const memo = params?.memo;
-  const acceptedAssets = params?.acceptedAssets;
+  const { username, amount, asset, memo, acceptedAssets } = params;
 
   const siteUrl = getSiteUrl();
 
+  // Build the canonical URL for this payment link (safe — no private data)
   const canonicalParams = new URLSearchParams();
   if (username) canonicalParams.set("username", username);
   if (amount) canonicalParams.set("amount", amount);
@@ -41,63 +37,60 @@ export async function generateMetadata({
   if (acceptedAssets) canonicalParams.set("acceptedAssets", acceptedAssets);
   const canonicalUrl = `${siteUrl}/pay?${canonicalParams.toString()}`;
 
+  // Guard: missing required params → safe fallback
   if (!username || !amount) {
     return buildFallbackMetadata(siteUrl, canonicalUrl);
   }
 
-  try {
-    const meta = await fetchPaymentMeta({ username, amount, asset, memo, acceptedAssets });
+  // Fetch safe metadata from the backend
+  const meta = await fetchPaymentMeta({ username, amount, asset, memo, acceptedAssets });
 
-    if (!meta) {
-      return buildFallbackMetadata(siteUrl, canonicalUrl);
-    }
-
-    const title = buildPaymentTitle(meta);
-    const description = buildPaymentDescription(meta);
-
-    const ogImageParams = new URLSearchParams({ type: "payment" });
-    ogImageParams.set("username", meta.username);
-    if (meta.amount) ogImageParams.set("amount", meta.amount);
-    ogImageParams.set("asset", meta.asset);
-    ogImageParams.set("state", meta.state);
-    const dynamicOgImage = `${siteUrl}/api/og?${ogImageParams.toString()}`;
-
-    return {
-      title: `${title} — ${SITE_NAME}`,
-      description,
-      alternates: {
-        canonical: canonicalUrl,
-      },
-      openGraph: {
-        type: "website",
-        siteName: SITE_NAME,
-        title,
-        description,
-        url: canonicalUrl,
-        images: [
-          {
-            url: dynamicOgImage,
-            width: 1200,
-            height: 630,
-            alt: title,
-          },
-        ],
-      },
-      twitter: {
-        card: "summary_large_image",
-        site: "@quickex",
-        title,
-        description,
-        images: [dynamicOgImage],
-      },
-      robots:
-        meta.state === "ACTIVE" || meta.state === "DRAFT"
-          ? { index: false, follow: false }
-          : { index: false, follow: false },
-    };
-  } catch {
+  // Backend unreachable or link not found → safe fallback
+  if (!meta) {
     return buildFallbackMetadata(siteUrl, canonicalUrl);
   }
+
+  const title = buildPaymentTitle(meta);
+  const description = buildPaymentDescription(meta);
+
+  // Build dynamic OG image URL with safe params only
+  const ogImageParams = new URLSearchParams({ type: "payment" });
+  ogImageParams.set("username", meta.username);
+  if (meta.amount) ogImageParams.set("amount", meta.amount);
+  ogImageParams.set("asset", meta.asset);
+  ogImageParams.set("state", meta.state);
+  const dynamicOgImage = `${siteUrl}/api/og?${ogImageParams.toString()}`;
+
+  return {
+    title: `${title} — ${SITE_NAME}`,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      title,
+      description,
+      url: canonicalUrl,
+      images: [
+        {
+          url: dynamicOgImage,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@quickex",
+      title,
+      description,
+      images: [dynamicOgImage],
+    },
+    robots: { index: false, follow: false },
+  };
 }
 
 function buildFallbackMetadata(siteUrl: string, canonicalUrl: string): Metadata {
