@@ -1,8 +1,31 @@
 @import "tailwindcss";
 
 :root {
+  /* Default: Dark Theme */
   --background: #0a0a0a;
   --foreground: #ededed;
+  --focus-ring: #a5b4fc;
+}
+
+/* Explicit Light Theme via class, data attribute, or media query fallback */
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --focus-ring: #6366f1;
+  }
+}
+
+.light, [data-theme="light"] {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --focus-ring: #6366f1;
+}
+
+.dark, [data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --focus-ring: #a5b4fc;
 }
 
 @theme inline {
@@ -29,9 +52,9 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid #a5b4fc;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 button:focus-visible,
@@ -41,7 +64,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.35);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {
